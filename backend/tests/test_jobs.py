@@ -61,9 +61,9 @@ def test_bad_image_rejected_without_job():
 def test_status_requires_auth_and_ownership():
     a = _client("owner@ex.com")
     job_id = a.post("/api/v1/readings", json={"image": _durl("good")}).json()["job_id"]
-    # anonymous
+    # anonymous (a guest who doesn't own it) → 404, existence not leaked
     anon = TestClient(app)
-    assert anon.get(f"/api/v1/readings/{job_id}", follow_redirects=False).status_code in (303, 307, 401, 403)
+    assert anon.get(f"/api/v1/readings/{job_id}", follow_redirects=False).status_code in (303, 307, 401, 403, 404)
     # a different user → 404 (existence not leaked)
     b = _client("intruder@ex.com")
     assert b.get(f"/api/v1/readings/{job_id}").status_code == 404

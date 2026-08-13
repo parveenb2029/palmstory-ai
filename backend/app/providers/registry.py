@@ -1,7 +1,7 @@
 """Provider registry — selects providers from config, with a bounded fallback.
 
-    VISION_PROVIDER   mock | huggingface        (default mock)
-    TEXT_PROVIDER     mock | huggingface        (default mock)
+    VISION_PROVIDER   mock | gemini | huggingface   (default mock)
+    TEXT_PROVIDER     mock | gemini | huggingface   (default mock)
     IMAGE_PROVIDER    mock | pollinations       (default mock)
     DEV_MOCK_AI       true → force mocks everywhere (default true)
     PROVIDER_FALLBACK_MOCK  true → real providers fall back to mock on error (default true)
@@ -34,7 +34,12 @@ def _choice(env: str) -> str:
 
 
 def get_vision_provider():
-    if _choice("VISION_PROVIDER") == "huggingface":
+    choice = _choice("VISION_PROVIDER")
+    if choice == "gemini":
+        from .gemini import GeminiVisionProvider
+        real = GeminiVisionProvider()
+        return with_fallback(real, MockVisionProvider()) if _fallback_on() else real
+    if choice == "huggingface":
         from .hf import HFVisionProvider
         real = HFVisionProvider()
         return with_fallback(real, MockVisionProvider()) if _fallback_on() else real
@@ -42,7 +47,12 @@ def get_vision_provider():
 
 
 def get_text_provider():
-    if _choice("TEXT_PROVIDER") == "huggingface":
+    choice = _choice("TEXT_PROVIDER")
+    if choice == "gemini":
+        from .gemini import GeminiTextProvider
+        real = GeminiTextProvider()
+        return with_fallback(real, MockTextProvider()) if _fallback_on() else real
+    if choice == "huggingface":
         from .hf import HFTextProvider
         real = HFTextProvider()
         return with_fallback(real, MockTextProvider()) if _fallback_on() else real

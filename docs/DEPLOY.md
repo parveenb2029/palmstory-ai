@@ -54,14 +54,33 @@ Free SQLite resets on restart. To keep data:
 3. Set `DATABASE_URL=postgresql://user:pass@host:5432/dbname`.
 No code changes — the app uses whatever `DATABASE_URL` points at.
 
-## Turning on real AI (optional)
-Set on your host:
+## Turning on real, image-based readings (Google Gemini — free)
+This makes the reading respond to the ACTUAL palm in the photo (instead of the
+built-in demo reading). Gemini has a free tier and only needs a free key.
+
+1. Go to <https://aistudio.google.com/apikey> and create a free API key.
+2. On your host (Render → your service → **Environment**), add:
+   ```
+   DEV_MOCK_AI=false
+   VISION_PROVIDER=gemini
+   TEXT_PROVIDER=gemini
+   GEMINI_API_KEY=<your key>
+   GEMINI_MODEL=gemini-2.0-flash
+   PROVIDER_FALLBACK_MOCK=true
+   ```
+3. Save — Render redeploys automatically. `/healthz` will then show
+   `"vision":"gemini"`.
+
+The comic stays the built-in illustrated style (no image key needed). If Gemini
+ever errors or hits its free limit, the app falls back to the built-in reading
+rather than failing — so it never breaks.
+
+### Alternative: Hugging Face
 ```
 DEV_MOCK_AI=false
-VISION_PROVIDER=huggingface  TEXT_PROVIDER=huggingface  IMAGE_PROVIDER=pollinations
-HF_TOKEN=<your huggingface token>     # Pollinations needs no key
+VISION_PROVIDER=huggingface  TEXT_PROVIDER=huggingface  HF_TOKEN=<token>
 ```
-A bounded fallback drops back to mocks if a provider errors.
+(Free HF vision inference is slower/less reliable than Gemini.)
 
 ---
 

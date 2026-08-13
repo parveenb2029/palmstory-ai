@@ -202,25 +202,21 @@ def logout(request: Request, csrf: str = Form("")):
 
 # ---------------------------------------------------------------- protected pages
 @app.get("/capture", response_class=HTMLResponse)
-def capture(request: Request, user: User = Depends(require_user)):
+def capture(request: Request, user: Optional[User] = Depends(get_current_user)):
+    # public: guests get one free reading, no login required
     return render("capture.html", request, user, page="capture")
 
 
-@app.get("/reading/{reading_id}", response_class=HTMLResponse)
-def reading_detail(reading_id: str, request: Request, user: User = Depends(require_user),
-                   db: Session = Depends(get_db)):
-    rec = reading_store.get_for_user(db, user.id, reading_id)
-    if rec is None:
-        raise HTTPException(status_code=404, detail="Reading not found.")
-    data = json.loads(rec.data_json)
+def _reading_ctx(data: dict, reading_id=None, created="", is_guest=False) -> dict:
     reading = data.get("reading", {})
     interp = data.get("interpretation", {})
     comic = data.get("comic", {})
-    ctx = {
-        "reading_id": rec.id,
+    return {
+        "reading_id": reading_id,
+        "is_guest": is_guest,
         "title": reading.get("title", "Your palm story"),
-        "hand": data.get("hand", rec.hand),
-        "created": rec.created_at.strftime("%d %b %Y"),
+        "hand": data.get("hand", "right"),
+        "created": created,
         "snapshot": reading.get("snapshot", ""),
         "facets": [{"tradition": f["tradition"], "detected": f["detected"],
                     "conf": f["detection_confidence"], "note": f["interpretations"][0]}
@@ -233,6 +229,33 @@ def reading_detail(reading_id: str, request: Request, user: User = Depends(requi
         "comic_title": comic.get("title", ""),
         "comic_panels": comic.get("panels", []),
     }
+
+
+@app.get("/reading/{reading_id}", response_class=HTMLResponse)
+def reading_detail(reading_id: str, request: Request, user: User = Depends(require_user),
+                   db: Session = Depends(get_db)):
+    rec = reading_store.get_for_user(db, user.id, reading_id)
+    if rec is None:
+        raise HTTPException(status_code=404, detail="Reading not found.")
+    data = json.loads(rec.data_json)
+    ctx = _reading_ctx(data, reading_id=rec.id, created=rec.created_at.strftime("%d %b %Y"))
+    return render("reading.html", request, user, page="reading", r=ctx)
+
+
+@app.get("/result/{job_id}", response_class=HTMLResponse)
+def result_page(job_id: str, request: Request,
+                user: Optional[User] = Depends(get_current_user),
+                db: Session = Depends(get_db)):
+    from .models.job import Job
+    job = db.get(Job, job_id)
+    owner = user.id if user else request.session.get("guest_id")
+    if job is None or job.user_id != owner:
+        raise HTTPException(status_code=404, detail="Reading not found.")
+    if job.status != "complete" or not job.result_json:
+        # still processing (or failed) — send them back to capture
+        return RedirectResponse("/capture", status_code=303)
+    data = json.loads(job.result_json)
+    ctx = _reading_ctx(data, reading_id=data.get("reading_id"), is_guest=(user is None))
     return render("reading.html", request, user, page="reading", r=ctx)
 
 

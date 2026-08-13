@@ -25,15 +25,16 @@ def _sync() -> bool:
 
 
 def submit(job_id: str, image_bytes: bytes, hand: str,
-           quality: dict, detection: dict, normalized_size: list) -> None:
-    args = (job_id, image_bytes, hand, quality, detection, normalized_size)
+           quality: dict, detection: dict, normalized_size: list,
+           persist_reading: bool = True) -> None:
+    args = (job_id, image_bytes, hand, quality, detection, normalized_size, persist_reading)
     if _sync():
         _run(*args)
     else:
         _executor.submit(_run, *args)
 
 
-def _run(job_id, image_bytes, hand, quality, detection, normalized_size):
+def _run(job_id, image_bytes, hand, quality, detection, normalized_size, persist_reading=True):
     db = SessionLocal()
     try:
         job = db.get(Job, job_id)
@@ -51,11 +52,12 @@ def _run(job_id, image_bytes, hand, quality, detection, normalized_size):
         result = generate_reading(image_bytes, hand, quality, detection,
                                   normalized_size, on_stage=on_stage)
 
-        # promote the completed result to a durable, owner-scoped Reading
-        from ..services.reading_store import create as create_reading
-        reading = create_reading(db, job.user_id, hand, result)
-        result["reading_id"] = reading.id
-        reading.data_json = json.dumps(result)   # include reading_id in stored copy
+        # promote to a durable, owner-scoped Reading — only for logged-in users
+        if persist_reading:
+            from ..services.reading_store import create as create_reading
+            reading = create_reading(db, job.user_id, hand, result)
+            result["reading_id"] = reading.id
+            reading.data_json = json.dumps(result)   # include reading_id in stored copy
 
         job.result_json = json.dumps(result)
         job.status = "complete"

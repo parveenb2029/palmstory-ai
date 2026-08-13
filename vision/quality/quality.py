@@ -24,11 +24,19 @@ def assess(img: Image.Image) -> dict:
 
     brightness = _finite(gray.mean()) if gray.size else 0.0
 
-    # sharpness: variance of a discrete Laplacian (needs at least a 3x3 interior)
-    if h >= 3 and w >= 3:
-        lap = (4.0 * gray[1:-1, 1:-1]
-               - gray[:-2, 1:-1] - gray[2:, 1:-1]
-               - gray[1:-1, :-2] - gray[1:-1, 2:])
+    # sharpness: variance of a discrete Laplacian, measured on a FIXED small size
+    # so the metric is resolution-independent and matches the client's check.
+    # (Full-res palm skin has gentle gradients → artificially low variance; a clear
+    # palm would otherwise be mis-flagged as blurry.)
+    sg_img = img.convert("L")
+    longest = max(sg_img.size)
+    if longest > 256:
+        r = 256 / longest
+        sg_img = sg_img.resize((max(1, int(sg_img.size[0] * r)), max(1, int(sg_img.size[1] * r))))
+    sg = np.asarray(sg_img, dtype=np.float32)
+    sh, sw = sg.shape
+    if sh >= 3 and sw >= 3:
+        lap = (4.0 * sg[1:-1, 1:-1] - sg[:-2, 1:-1] - sg[2:, 1:-1] - sg[1:-1, :-2] - sg[1:-1, 2:])
         sharpness = _finite(lap.var()) if lap.size else 0.0
     else:
         sharpness = 0.0
@@ -39,16 +47,30 @@ def assess(img: Image.Image) -> dict:
     center_var = _finite(region.var()) if region.size else 0.0
 
     reasons = []
-    if brightness < DARK:
-        reasons.append("It's too dark — move into better light.")
-    if brightness > BRIGHT:
-        reasons.append("It's too bright — reduce glare or harsh light.")
+    blocking = False
+    # darkness
+    if brightness < 22:
+        reasons.append("It's too dark to see your palm — move into much brighter light.")
+        blocking = True
+    elif brightness < DARK:
+        reasons.append("It's a little dark — a bit more light would help.")
+    # brightness / glare
+    if brightness > 248:
+        reasons.append("It's washed out by glare — reduce direct or harsh light.")
+        blocking = True
+    elif brightness > BRIGHT:
+        reasons.append("It's a touch bright — soften the glare if you can.")
+    # blur is always overridable (a webcam simply can't focus on a close palm)
     if sharpness < BLUR:
-        reasons.append("The image is blurry — hold steady and try again.")
+        reasons.append("Looks a little soft — hold steady, or snap it on your phone and upload.")
+    # resolution
     if min(w, h) < MIN_RES:
-        reasons.append("The image is low-resolution — use a larger, closer photo.")
+        reasons.append("The photo is too small — use a larger, closer image.")
+        blocking = True
+    # empty frame (nothing palm-like in the middle)
     if center_var < EMPTY and sharpness >= BLUR:
-        reasons.append("No clear palm in frame — fill the outline with your open palm.")
+        reasons.append("I can't see a palm in the frame — fill the outline with your open palm.")
+        blocking = True
 
     usable = len(reasons) == 0
     b_score = 1 - min(1, abs(brightness - 140) / 140)
@@ -62,5 +84,6 @@ def assess(img: Image.Image) -> dict:
         "coverage": round(_finite(min(1.0, center_var / 200.0)), 3),
         "score": score,
         "usable": usable,
+        "blocking": blocking,       # severe issues that can't be overridden
         "reasons": reasons,
     }

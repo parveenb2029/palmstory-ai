@@ -71,3 +71,19 @@ def test_registry_selects_real_when_mocks_off():
     assert reg.get_image_provider().name.startswith("pollinations")
     # reset for other tests
     _reload_registry(DEV_MOCK_AI="true")
+
+
+def test_gemini_selectable_and_falls_back_without_key(monkeypatch):
+    """Gemini can be selected; with no API key it degrades to mock (never crashes)."""
+    import importlib
+    monkeypatch.setenv("DEV_MOCK_AI", "false")
+    monkeypatch.setenv("VISION_PROVIDER", "gemini")
+    monkeypatch.setenv("TEXT_PROVIDER", "gemini")
+    monkeypatch.setenv("PROVIDER_FALLBACK_MOCK", "true")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    from backend.app.providers import registry
+    importlib.reload(registry)
+    # observe with no key → ProviderError inside → fallback returns a mock observation
+    obs = registry.get_vision_provider().observe(b"not-a-real-image", "right")
+    assert obs.hand == "right" and len(obs.observations) >= 1
+    importlib.reload(registry)  # restore default for other tests

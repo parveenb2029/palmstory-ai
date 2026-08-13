@@ -40,9 +40,10 @@ def _result(c, durl, hand="right"):
     return c.get(f"/api/v1/readings/{jid}").json()["result"]
 
 
-def test_requires_auth():
-    r = TestClient(app).post("/api/v1/readings", json={"image": "x"}, follow_redirects=False)
-    assert r.status_code in (303, 307, 401, 403)
+def test_guest_can_read_without_login():
+    # reading no longer requires an account — a guest gets one free reading
+    r = TestClient(app).post("/api/v1/readings", json={"image": _durl("good")})
+    assert r.status_code == 202 and r.json()["job_id"]
 
 
 def test_good_image_yields_validated_observation():

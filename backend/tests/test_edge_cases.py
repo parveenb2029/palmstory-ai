@@ -96,3 +96,51 @@ def test_templates_autoescape_active():
     from backend.app.main import templates
     out = templates.env.from_string("{{ x }}").render(x="<script>alert(1)</script>")
     assert "<script>" not in out and "&lt;script&gt;" in out
+
+
+def _palmish(bright=1.0):
+    from PIL import ImageDraw
+    c = lambda v: int(v * bright)
+    img = Image.new("RGB", (640, 480), (c(70), c(55), c(45)))
+    d = ImageDraw.Draw(img)
+    d.ellipse([120, 80, 520, 440], fill=(c(200), c(165), c(135)))
+    for x in (200, 270, 340, 410):
+        d.rectangle([x, 40, x + 40, 120], fill=(c(200), c(165), c(135)))
+    for pts in [[(180, 220), (460, 210)], [(180, 260), (440, 300)]]:
+        d.line(pts, fill=(c(150), c(120), c(100)), width=4)
+    return img
+
+
+def test_borderline_shot_can_be_used_with_override():
+    c = _client()
+    dim = _durl(_palmish(0.28))
+    # first attempt: borderline → marginal, override offered
+    r = c.post("/api/v1/readings", json={"image": dim}).json()
+    assert r["status"] == "marginal" and r["can_override"] is True
+    # with override → proceeds
+    r2 = c.post("/api/v1/readings", json={"image": dim, "allow_marginal": True})
+    assert r2.status_code == 202
+
+
+def test_severe_shot_cannot_be_overridden():
+    c = _client()
+    for img in [_palmish(0.03), Image.new("RGB", (1, 1), (150, 150, 150))]:
+        r = c.post("/api/v1/readings", json={"image": _durl(img), "allow_marginal": True}).json()
+        assert r["status"] == "rejected" and r["can_override"] is False
+
+
+def test_sharpness_is_resolution_independent():
+    """A large, detailed image must not be mis-flagged blurry just because it's big;
+    a heavily blurred one must still be caught. (Client/server scale-match regression.)"""
+    from PIL import ImageDraw, ImageFilter
+    from vision.quality.quality import assess
+    # a large, detailed image (lots of fine edges) — must read as sharp
+    big = Image.new("RGB", (1600, 1200), (120, 110, 100))
+    d = ImageDraw.Draw(big)
+    for i in range(0, 1600, 12):
+        d.line([(i, 0), (i, 1200)], fill=(210, 190, 160), width=2)
+    for j in range(0, 1200, 16):
+        d.line([(0, j), (1600, j)], fill=(90, 80, 70), width=2)
+    assert assess(big)["sharpness"] > 60          # not blurry despite large size
+    # same image blurred heavily → flagged
+    assert assess(big.filter(ImageFilter.GaussianBlur(7)))["sharpness"] < 60

@@ -3,7 +3,7 @@
 {% block content %}
 <article class="reading">
   <div class="head">
-    <span class="eyebrow">Your palm story · {{ r.hand }} palm · {{ r.created }}</span>
+    <span class="eyebrow">Your palm story · {{ r.hand }} palm{% if r.created %} · {{ r.created }}{% endif %}</span>
     <h1>{{ r.title }}</h1>
   </div>
 
@@ -48,24 +48,53 @@
     <div class="comic">
       {% for p in r.comic_panels %}
       <figure class="panel">
-        <span class="num">{{ p.panel }}</span>
-        <img src="{{ p.image_url }}" alt="Panel {{ p.panel }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" />
-        <figcaption class="cap">{{ p.caption }}</figcaption>
+        <img src="{{ p.image_url }}" alt="Comic panel {{ p.panel }}: {{ p.caption }}" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px" />
+      </figure>
       </figure>
       {% endfor %}
     </div>
   </div>
   {% endif %}
 
+  {# ---- Ask about your reading ---- #}
+  <div class="rsec">
+    <h3>Ask about your reading</h3>
+    {% if current_user %}
+      <div class="qa-box">
+        <p class="muted" id="qa-intro">Curious about something specific in your reading? Ask away.</p>
+        <div id="qa-thread"></div>
+        <div class="qa-input">
+          <input id="qa-q" type="text" maxlength="300" placeholder="e.g. What does my heart line say about relationships?" />
+          <button id="qa-ask" class="btn primary" data-reading="{{ r.reading_id }}">Ask</button>
+        </div>
+      </div>
+    {% else %}
+      <div class="signup-gate">
+        <p style="margin-bottom:14px">Have follow-up questions about your palm? <strong>Create a free account</strong> to ask questions about your reading and to get more readings.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <a href="/register" class="btn primary">Sign up free</a>
+          <a href="/login" class="btn ghost">Log in</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
   <div class="disclaimer" style="margin-top:26px">Traditional palmistry interpretation, presented for entertainment. Not a prediction and not medical, financial, legal, or psychological advice.</div>
 
   <div class="center" style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center">
-    <a href="/capture" class="btn ghost">Read another palm</a>
-    <a href="/history" class="btn primary">My readings</a>
-    <form action="/reading/{{ r.reading_id }}/delete" method="post" style="display:inline">
-      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
-      <button type="submit" class="btn danger" style="padding:12px 18px">Delete this reading</button>
-    </form>
+    {% if current_user %}
+      <a href="/capture" class="btn ghost">Read another palm</a>
+      <a href="/history" class="btn primary">My readings</a>
+      {% if r.reading_id %}
+      <form action="/reading/{{ r.reading_id }}/delete" method="post" style="display:inline">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+        <button type="submit" class="btn danger" style="padding:12px 18px">Delete this reading</button>
+      </form>
+      {% endif %}
+    {% else %}
+      <a href="/register" class="btn primary">Sign up for more readings</a>
+      <a href="/" class="btn ghost">Home</a>
+    {% endif %}
   </div>
 </article>
 {% endblock %}

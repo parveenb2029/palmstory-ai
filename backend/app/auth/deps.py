@@ -1,5 +1,6 @@
 """Auth dependencies. `get_current_user` is optional (for nav state);
 `require_user` enforces login and triggers a redirect to /login."""
+import uuid
 from typing import Optional
 
 from fastapi import Depends, Request
@@ -24,3 +25,17 @@ def require_user(user: Optional[User] = Depends(get_current_user)) -> User:
     if user is None:
         raise NotAuthenticated()
     return user
+
+
+def ensure_guest_id(request: Request) -> str:
+    """A stable per-browser id for guests (stored in the signed session cookie)."""
+    gid = request.session.get("guest_id")
+    if not gid:
+        gid = "guest:" + uuid.uuid4().hex
+        request.session["guest_id"] = gid
+    return gid
+
+
+def owner_key(request: Request, user: Optional[User]) -> str:
+    """Who owns a reading/job: the logged-in user, or the guest browser."""
+    return user.id if user else ensure_guest_id(request)

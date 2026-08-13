@@ -46,6 +46,13 @@ const $ = (id) => document.getElementById(id);
       video.classList.remove("hidden");
       guide.classList.remove("hidden");
       stageMsg.classList.add("hidden");
+      { const sw = $("switchBtn"); if (sw) sw.textContent = "Switch camera"; }
+      // mirror the preview only for the front camera
+      try {
+        const fm = state.stream.getVideoTracks()[0].getSettings().facingMode;
+        const front = fm ? fm === "user" : state.facing === "user";
+        document.getElementById("stage").classList.toggle("mirror", front);
+      } catch (e) { document.getElementById("stage").classList.toggle("mirror", state.facing === "user"); }
       try { await video.play(); }
       catch (e) { video.onloadedmetadata = () => video.play().catch(() => {}); }
     } catch (err) {
@@ -65,6 +72,13 @@ const $ = (id) => document.getElementById(id);
   function stopCamera() {
     if (state.stream) { state.stream.getTracks().forEach((t) => t.stop()); state.stream = null; }
     video.srcObject = null;
+  }
+  function showCameraOff() {
+    stopCamera();
+    video.classList.add("hidden"); guide.classList.add("hidden");
+    stageMsg.classList.remove("hidden");
+    stageMsg.innerHTML = "Camera is off. <b>Upload a photo</b>, or tap <b>Turn on camera</b> to use it.";
+    const sw = $("switchBtn"); if (sw) sw.textContent = "Turn on camera";
   }
   function camError(err) {
     video.classList.add("hidden"); guide.classList.add("hidden");
@@ -87,7 +101,7 @@ const $ = (id) => document.getElementById(id);
     const w = video.videoWidth, h = video.videoHeight;
     const c = document.createElement("canvas"); c.width = w; c.height = h;
     const ctx = c.getContext("2d");
-    ctx.translate(w, 0); ctx.scale(-1, 1);
+    if (state.facing === "user") { ctx.translate(w, 0); ctx.scale(-1, 1); }  // mirror only the selfie cam
     ctx.drawImage(video, 0, 0, w, h);
     state.captured = c.toDataURL("image/jpeg", 0.9);
     stopCamera();
@@ -154,19 +168,22 @@ const $ = (id) => document.getElementById(id);
         const centerVar = cs2 / cc - (cs / cc) ** 2;
 
         const reasons = [];
-        if (brightness < Q.DARK) reasons.push("It's a little dark — move into better light.");
-        if (brightness > Q.BRIGHT) reasons.push("Too bright — soften glare or harsh light.");
-        if (sharpness < Q.BLUR) reasons.push("Looks blurry — hold steady and try again.");
-        if (Math.min(W, H) < Q.MIN_RES) reasons.push("Low resolution — use a larger, closer photo.");
-        if (centerVar < Q.EMPTY && sharpness >= Q.BLUR) reasons.push("I can't see a palm clearly — fill the outline with your open palm.");
+        let blocking = false;
+        if (brightness < 22) { reasons.push("Too dark to see your palm — much brighter light needed."); blocking = true; }
+        else if (brightness < Q.DARK) reasons.push("A little dark — a bit more light would help.");
+        if (brightness > 248) { reasons.push("Washed out by glare — reduce harsh light."); blocking = true; }
+        else if (brightness > Q.BRIGHT) reasons.push("A touch bright — soften glare if you can.");
+        if (sharpness < Q.BLUR) reasons.push("Looks a little soft — hold steady, or snap it on your phone and upload.");
+        if (Math.min(W, H) < Q.MIN_RES) { reasons.push("Too small — use a larger, closer image."); blocking = true; }
+        if (centerVar < Q.EMPTY && sharpness >= Q.BLUR) { reasons.push("I can't see a palm — fill the outline with your open palm."); blocking = true; }
 
         const bScore = 1 - Math.min(1, Math.abs(brightness - 140) / 140);
         const sScore = Math.min(1, sharpness / 220);
         const usable = reasons.length === 0;
         const score = Math.round(((usable ? 1 : 0.4) * 0.4 + bScore * 0.3 + sScore * 0.3) * 100);
-        resolve({ usable, score, reasons, metrics: { brightness: Math.round(brightness), sharpness: Math.round(sharpness), resolution: W + "×" + H } });
+        resolve({ usable, blocking, score, reasons, metrics: { brightness: Math.round(brightness), sharpness: Math.round(sharpness), resolution: W + "×" + H } });
       };
-      img.onerror = () => resolve({ usable: true, score: 70, reasons: [], metrics: {} });
+      img.onerror = () => resolve({ usable: true, blocking: false, score: 70, reasons: [], metrics: {} });
       img.src = dataUrl;
     });
   }
@@ -177,14 +194,29 @@ const $ = (id) => document.getElementById(id);
     submit.disabled = true;
     const q = await analyzeQuality(dataUrl);
     const m = q.metrics;
+    state.override = false;
     if (q.usable) {
       el.className = "quality ok";
       el.innerHTML = "<strong>Looks good ✓</strong><span class=\"qmeta\">brightness " + m.brightness + " · sharpness " + m.sharpness + " · " + m.resolution + "</span>";
       submit.disabled = false;
-    } else {
+    } else if (q.blocking) {
+      // severe — must retake (no override)
       el.className = "quality warn";
       el.innerHTML = "<strong>Let's retake this one</strong><ul>" + q.reasons.map((r) => "<li>" + r + "</li>").join("") + "</ul>";
       submit.disabled = true;
+    } else {
+      // borderline — let them use it anyway
+      el.className = "quality warn";
+      el.innerHTML = "<strong>Not perfect, but usable</strong><ul>" + q.reasons.map((r) => "<li>" + r + "</li>").join("") +
+        "</ul><button type=\"button\" class=\"btn ghost sm\" id=\"useAnywayBtn\">Use this photo anyway →</button>";
+      submit.disabled = true;
+      const ua = $("useAnywayBtn");
+      if (ua) ua.addEventListener("click", () => {
+        state.override = true;
+        submit.disabled = false;
+        el.className = "quality ok";
+        el.innerHTML = "<strong>Okay — using this photo ✓</strong><span class=\"qmeta\">reading may be less accurate</span>";
+      });
     }
   }
 
@@ -206,14 +238,18 @@ const $ = (id) => document.getElementById(id);
       $("procBar").style.width = (progress || (step + 1) * 25) + "%";
     }
 
-    function backToReview(reasons) {
+    function backToReview(reasons, canOverride) {
       $("procStep").classList.add("hidden");
       $("reviewStep").classList.remove("hidden");
       const el = $("qualityResult");
       el.className = "quality warn";
       el.innerHTML = "<strong>Let's retake this one</strong>" +
-        (reasons && reasons.length ? "<ul>" + reasons.map((r) => "<li>" + r + "</li>").join("") + "</ul>" : "");
+        (reasons && reasons.length ? "<ul>" + reasons.map((r) => "<li>" + r + "</li>").join("") + "</ul>" : "") +
+        (canOverride ? "<button type=\"button\" class=\"btn ghost sm\" id=\"useAnywayBtn2\">Use this photo anyway →</button>" : "");
       $("submitBtn").disabled = true;
+      const ua = $("useAnywayBtn2");
+      if (ua) ua.addEventListener("click", () => { state.override = true; $("submitBtn").disabled = false;
+        el.className = "quality ok"; el.innerHTML = "<strong>Okay — using this photo ✓</strong>"; });
     }
 
     paint(0, 10);
@@ -221,18 +257,24 @@ const $ = (id) => document.getElementById(id);
     try {
       const res = await fetch("/api/v1/readings", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: state.captured, hand: state.hand }),
+        body: JSON.stringify({ image: state.captured, hand: state.hand, allow_marginal: !!state.override }),
       });
       const data = await res.json();
-      if (data.status === "rejected" || (data.quality && !data.quality.usable)) {
-        return backToReview(data.quality ? data.quality.reasons : []);
+      if (data.status === "signup_required") {
+        $("procTitle").textContent = "One free reading used";
+        window.location.href = "/register";
+        return;
+      }
+      if (data.status === "rejected" || data.status === "marginal" ||
+          (data.quality && !data.quality.usable && !state.override)) {
+        return backToReview(data.quality ? data.quality.reasons : [], data.can_override);
       }
       jobId = data.job_id;
     } catch (e) {
-      // backend unreachable — client gate already passed, go to the reading
-      return void (window.location.href = "/history");
+      // backend unreachable — client gate already passed
+      return void (window.location.href = "/");
     }
-    if (!jobId) return void (window.location.href = "/history");
+    if (!jobId) return void (window.location.href = "/");
 
     // poll the job until it finishes
     const poll = async () => {
@@ -246,7 +288,7 @@ const $ = (id) => document.getElementById(id);
         paint(stageStep[s.stage] ?? 0, s.progress);
         if (s.status === "complete") {
           $("procTitle").textContent = "Your reading is ready!";
-          setTimeout(() => (window.location.href = "/reading/" + (s.reading_id || "")), 600);
+          setTimeout(() => (window.location.href = "/result/" + jobId), 600);
           return;
         }
       } catch (e) { /* transient — keep polling */ }
@@ -256,14 +298,19 @@ const $ = (id) => document.getElementById(id);
   }
 
   $("shutter")?.addEventListener("click", capture);
-  $("uploadBtn")?.addEventListener("click", () => file.click());
+  $("uploadBtn")?.addEventListener("click", () => { showCameraOff(); file.click(); });
   file?.addEventListener("change", () => file.files[0] && fromFile(file.files[0]));
   $("switchBtn")?.addEventListener("click", () => {
+    if (!state.stream) { startCamera(); return; }          // off → turn on
     state.facing = state.facing === "environment" ? "user" : "environment";
-    stopCamera(); startCamera();
+    stopCamera(); startCamera();                            // on → flip front/rear
   });
   $("retakeBtn")?.addEventListener("click", goCapture);
   $("submitBtn")?.addEventListener("click", runPipeline);
+
+  // release the camera when leaving the page / closing the tab
+  window.addEventListener("pagehide", stopCamera);
+  window.addEventListener("beforeunload", stopCamera);
 
   startCamera();
 })();
