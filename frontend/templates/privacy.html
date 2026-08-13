@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Privacy — PalmStory AI{% endblock %}
+{% block content %}
+<section class="doc">
+  <span class="eyebrow">Privacy</span>
+  <h1>Your palm, handled with care</h1>
+  <p>Palm images can be sensitive, biometric-like information. PalmStory AI is built privacy-first.</p>
+
+  <h2>What happens to your palm image</h2>
+  <p>By default your palm photo is used only to create your reading, then <strong>deleted</strong>. We store the reading and comic — not the raw image — unless you explicitly turn on retention in Settings.</p>
+
+  <h2>What we never do</h2>
+  <p>We never train models on your images, never sell or share them, and never put images in logs or error reports.</p>
+
+  <h2>Your controls</h2>
+  <p>You can view your history, delete a single reading, delete everything, export your data, and delete your account — which also removes any stored images.</p>
+
+  <h2>Entertainment, not prediction</h2>
+  <p>Readings are AI-generated, fictionalized storytelling based on visible features. Palmistry is a cultural tradition, not a scientifically validated method of prediction, and nothing here is medical, financial, legal, or psychological advice.</p>
+
+  <p class="hint" style="margin-top:20px">This page states the intended model; the enforcing code lands in Phase 13. A full policy will accompany launch.</p>
+</section>
+{% endblock %}

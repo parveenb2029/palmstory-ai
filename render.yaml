@@ -1,0 +1,26 @@
+# One-click deploy blueprint for Render (free tier) → gives you a public https URL.
+# In Render: New → Blueprint → connect this repo → Apply. That's it.
+services:
+  - type: web
+    name: palmstory-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.4"
+      - key: DEV_MOCK_AI      # mock AI = free, no keys. Set false + provider keys for real AI.
+        value: "true"
+      - key: JOBS_SYNC
+        value: "false"
+      - key: SECURE_COOKIES   # Render serves HTTPS → secure cookies + HSTS on
+        value: "true"
+      - key: SECRET_KEY       # auto-generated strong secret
+        generateValue: true
+      - key: RATE_LIMIT_READINGS_PER_HOUR
+        value: "20"
+    # NOTE: the free tier's disk is ephemeral — the SQLite database resets on
+    # each restart/deploy. Fine for a shareable demo. For durable data, add a
+    # Render Postgres and set DATABASE_URL (see docs/DEPLOY.md).

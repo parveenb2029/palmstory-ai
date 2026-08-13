@@ -1,0 +1,6 @@
+# Optional: accurate, landmark-based palm detection.
+# The app runs without these (heuristic fallback); install for production-grade
+# detection. NOTE: MediaPipe wheels are platform/Python-version specific —
+# verify a compatible version for your environment before relying on it.
+mediapipe>=0.10
+opencv-python-headless>=4.9

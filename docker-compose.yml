@@ -1,0 +1,28 @@
+# Default: single container on SQLite with mock AI — `docker compose up`.
+# Optional Postgres for production-like runs — `docker compose --profile postgres up`.
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DEV_MOCK_AI: "true"          # set false + provider/HF_TOKEN to use real AI
+      SECRET_KEY: "change-me-in-production"
+      JOBS_SYNC: "false"
+      # DATABASE_URL: "postgresql://palmstory:palmstory@db:5432/palmstory"
+    volumes:
+      - app_data:/app/data
+
+  db:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_USER: palmstory
+      POSTGRES_PASSWORD: palmstory
+      POSTGRES_DB: palmstory
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  app_data:
+  db_data:

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{% block title %}PalmStory AI{% endblock %}</title>
+<meta name="description" content="Your palm. Your story. Reimagined by AI. An entertainment-only palmistry experience." />
+<meta property="og:title" content="PalmStory AI" />
+<meta property="og:description" content="Your palm. Your story. Reimagined by AI." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/static/css/app.css" />
+</head>
+<body>
+<a href="#main" class="skip-link">Skip to content</a>
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="/"><span class="mark">✷</span>PalmStory<span class="muted" style="font-weight:400">&nbsp;AI</span></a>
+    <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="/" {% if page=='home' %}aria-current="page"{% endif %}>Home</a>
+      <a href="/#how">How it works</a>
+      {% if current_user %}
+        <a href="/history" {% if page=='history' %}aria-current="page"{% endif %}>My Readings</a>
+        <a href="/settings" {% if page=='settings' %}aria-current="page"{% endif %}>Settings</a>
+        <a href="/capture" class="btn primary" style="padding:8px 18px">Read my palm</a>
+        <form action="/logout" method="post" style="display:inline">
+          <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+          <button class="btn ghost" type="submit" style="padding:8px 16px">Log out</button>
+        </form>
+      {% else %}
+        <a href="/privacy" {% if page=='privacy' %}aria-current="page"{% endif %}>Privacy</a>
+        <a href="/login" class="btn ghost" style="padding:8px 16px">Log in</a>
+        <a href="/register" class="btn primary" style="padding:8px 18px">Get started</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main id="main">{% block content %}{% endblock %}</main>
+
+<footer class="site">
+  <div class="wrap foot">
+    <span><strong>PalmStory AI</strong> · Entertainment only — a traditional, AI-reimagined palmistry experience, not prediction or advice.</span>
+    <span><a href="/privacy">Privacy</a> · <a href="/#how">How it works</a> · <a href="/history">My Readings</a></span>
+  </div>
+</footer>
+
+<script src="/static/js/app.js" type="module"></script>
+</body>
+</html>

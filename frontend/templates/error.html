@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — PalmStory AI{% endblock %}
+{% block content %}
+<section class="doc" style="text-align:center;padding-top:60px">
+  <div class="hero-art" style="max-width:200px;margin:0 auto 24px;aspect-ratio:1" aria-hidden="true">
+    <div class="halo"></div>
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:60%;position:relative;z-index:1">
+      <circle cx="50" cy="46" r="26" fill="none" stroke="#C0902B" stroke-width="3"/>
+      <path d="M38 60 C46 52 54 52 62 60" fill="none" stroke="#C0902B" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <span class="eyebrow">Error {{ code }}</span>
+  <h1 class="serif" style="font-size:2.2rem;margin:8px 0">{{ message }}</h1>
+  <p class="muted" style="margin-bottom:24px">The lines led somewhere unexpected. Let's get you back.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="/" class="btn ghost">Home</a>
+    <a href="/capture" class="btn primary">Read my palm</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Create account — PalmStory AI{% endblock %}
+{% block content %}
+<div class="auth">
+  <div class="card">
+    <h1>Create your account</h1>
+    <p class="muted" style="margin-bottom:20px">Save your readings and revisit them anytime.</p>
+    {% if error %}<div class="disclaimer" style="background:#fbeaec;color:#8f2d3a;margin-bottom:16px">{{ error }}</div>{% endif %}
+    <form action="/register" method="post" novalidate>
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" name="name" type="text" autocomplete="name" value="{{ name or '' }}" placeholder="Your name" />
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" value="{{ email or '' }}" placeholder="you@example.com" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required />
+        <span class="hint">Stored securely with Argon2 hashing — never in plaintext.</span>
+      </div>
+      <button class="btn primary block lg" type="submit">Create account</button>
+    </form>
+    <p class="swap">Already have an account? <a href="/login">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

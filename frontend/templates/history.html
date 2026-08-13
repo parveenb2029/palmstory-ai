@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}My Readings — PalmStory AI{% endblock %}
+{% block content %}
+<section class="history">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+    <div>
+      <span class="eyebrow">My Readings</span>
+      <h1 class="serif" style="font-size:2rem;margin-top:6px">Your palm stories</h1>
+    </div>
+    <a href="/capture" class="btn primary">New reading</a>
+  </div>
+
+  {% if items %}
+  <div class="rlist">
+    {% for it in items %}
+    <div class="ritem">
+      <div class="thumb" aria-hidden="true"></div>
+      <div>
+        <b>{{ it.title }}</b>
+        <div class="meta">{{ it.hand }} palm · {{ it.created_at.strftime('%d %b %Y') }}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <a href="/reading/{{ it.id }}" class="btn ghost" style="padding:8px 16px">Open</a>
+        <form action="/reading/{{ it.id }}/delete" method="post" style="display:inline">
+          <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+          <button type="submit" class="btn danger" style="padding:8px 14px" aria-label="Delete">✕</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center;margin-top:24px">
+    <p class="muted" style="margin-bottom:16px">No readings yet — your palm stories will appear here.</p>
+    <a href="/capture" class="btn primary">Read my palm</a>
+  </div>
+  {% endif %}
+
+  <p class="hint" style="margin-top:20px">Manage your data in <a href="/settings" style="color:var(--primary)">Settings</a>.</p>
+</section>
+{% endblock %}

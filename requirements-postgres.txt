@@ -1,0 +1,5 @@
+# For deploying with Postgres instead of SQLite (durable data).
+# Build with: pip install -r requirements-postgres.txt
+# Then set DATABASE_URL=postgresql://USER:PASS@HOST:5432/DBNAME
+-r requirements.txt
+psycopg2-binary>=2.9

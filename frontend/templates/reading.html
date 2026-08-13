@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ r.title }} — PalmStory AI{% endblock %}
+{% block content %}
+<article class="reading">
+  <div class="head">
+    <span class="eyebrow">Your palm story · {{ r.hand }} palm · {{ r.created }}</span>
+    <h1>{{ r.title }}</h1>
+  </div>
+
+  {% if r.snapshot %}
+  <div class="snapshot">
+    <span class="eyebrow">Palm snapshot</span>
+    <p style="margin-top:8px;font-size:1.1rem">{{ r.snapshot }}</p>
+  </div>
+  {% endif %}
+
+  {% if r.facets %}
+  <div class="rsec">
+    <h3>Lines we could read</h3>
+    <p class="hint" style="margin-bottom:10px">Confidence is how clearly we <em>detected</em> the line — not that any interpretation is true.</p>
+    <div class="lines-tbl">
+      {% for f in r.facets %}
+      <div class="line-row {% if not f.detected %}faint{% endif %}">
+        <div><strong>{{ f.tradition }}</strong><br /><span class="muted" style="font-size:.88rem">{{ f.note }}</span></div>
+        <span class="conf">{{ '%.0f'|format(f.conf*100) }}%{% if f.detected %} · detected{% else %} · faint{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if r.sections.heart %}<div class="rsec"><h3>Heart &amp; Relationships</h3><p class="muted">{{ r.sections.heart }}</p></div>{% endif %}
+  {% if r.sections.mind %}<div class="rsec"><h3>Mind &amp; Personality</h3><p class="muted">{{ r.sections.mind }}</p></div>{% endif %}
+  {% if r.sections.career %}<div class="rsec"><h3>Career &amp; Ambition</h3><p class="muted">{{ r.sections.career }}</p></div>{% endif %}
+
+  <div class="rsec two">
+    <div><h3>Strengths</h3><div class="chips">{% for s in r.strengths %}<span>{{ s }}</span>{% endfor %}</div></div>
+    <div><h3>Challenges</h3><div class="chips">{% for c in r.challenges %}<span>{{ c }}</span>{% endfor %}</div></div>
+  </div>
+
+  {% if r.themes %}<div class="rsec"><h3>Life themes</h3><div class="chips">{% for t in r.themes %}<span>{{ t }}</span>{% endfor %}</div></div>{% endif %}
+
+  {% if r.story %}<div class="rsec"><h3>Your story</h3><p class="finalstory">{{ r.story }}</p></div>{% endif %}
+
+  {% if r.comic_panels %}
+  <div class="rsec">
+    <h3>Your story in comic form</h3>
+    <div class="comic">
+      {% for p in r.comic_panels %}
+      <figure class="panel">
+        <span class="num">{{ p.panel }}</span>
+        <img src="{{ p.image_url }}" alt="Panel {{ p.panel }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" />
+        <figcaption class="cap">{{ p.caption }}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="disclaimer" style="margin-top:26px">Traditional palmistry interpretation, presented for entertainment. Not a prediction and not medical, financial, legal, or psychological advice.</div>
+
+  <div class="center" style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center">
+    <a href="/capture" class="btn ghost">Read another palm</a>
+    <a href="/history" class="btn primary">My readings</a>
+    <form action="/reading/{{ r.reading_id }}/delete" method="post" style="display:inline">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}" />
+      <button type="submit" class="btn danger" style="padding:12px 18px">Delete this reading</button>
+    </form>
+  </div>
+</article>
+{% endblock %}

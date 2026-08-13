@@ -1,0 +1,6 @@
+line-length = 120
+
+[lint]
+# Pyflakes (F) catches real correctness errors: unused imports, undefined names,
+# duplicate keys, f-string bugs. That's the CI gate — style is not enforced.
+select = ["F"]

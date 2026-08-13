@@ -1,0 +1,63 @@
+{
+  "_meta": {
+    "source": "Traditional palmistry — Hasta Samudrika Shastra (Vedic) and Western cheirology. For ENTERTAINMENT only; not scientific, not prediction, not medical/financial/legal advice.",
+    "how": "Each observed feature is matched against quality rules; matched rules contribute a traditional 'is read as' statement plus optional strength/challenge/theme tags. Never asserts lifespan, illness, or fixed outcomes."
+  },
+  "heart_line": {
+    "tradition": "Hridaya Rekha (heart line)",
+    "domain": "emotions and relationships",
+    "qualities": [
+      {"match": ["curv", "upward", "rising"], "text": "an upward-curving heart line is traditionally read as warm, openly expressive affection", "strength": "Warmth in relationships", "theme": "Connection"},
+      {"match": ["straight", "level"], "text": "a straighter heart line is read as steady, more private affection", "strength": "Emotional steadiness", "theme": "Steadiness"},
+      {"match": ["long"], "text": "a long heart line suggests generosity in love", "strength": "Generosity"},
+      {"match": ["short"], "text": "a shorter heart line suggests keeping feelings close", "challenge": "Sharing feelings openly"},
+      {"match": ["deep", "strong", "clear", "visible"], "text": "a clear heart line is read as feeling things deeply", "strength": "Depth of feeling"},
+      {"match": ["faint", "weak"], "text": "a faint heart line is read as guarding the heart", "challenge": "Letting others in"},
+      {"match": ["chain", "broken", "island"], "text": "breaks are traditionally read as ups and downs in matters of the heart", "theme": "Change"}
+    ],
+    "default": {"text": "a distinctive emotional signature"}
+  },
+  "head_line": {
+    "tradition": "Mastak Rekha (head line)",
+    "domain": "mind and decision-making",
+    "qualities": [
+      {"match": ["long"], "text": "a long head line is linked with thorough, wide-ranging thinking", "strength": "Considered decision-making", "theme": "Depth over speed"},
+      {"match": ["short"], "text": "a short head line is linked with quick, decisive thinking", "strength": "Decisiveness"},
+      {"match": ["straight", "even", "level"], "text": "a straight head line is read as practical, logical thinking", "strength": "Clarity"},
+      {"match": ["curv", "slope", "sloping", "dip"], "text": "a sloping head line is read as imaginative, creative thinking", "strength": "Imagination", "theme": "Creativity"},
+      {"match": ["deep", "clear", "strong"], "text": "a clear head line suggests focus", "strength": "Focus"},
+      {"match": ["faint", "weak"], "text": "a faint head line is read as a dreamy, wandering mind", "challenge": "Staying focused"}
+    ],
+    "default": {"text": "a characteristic way of thinking"}
+  },
+  "life_line": {
+    "tradition": "Jeevan Rekha (life line)",
+    "domain": "vitality and enthusiasm for life (never lifespan)",
+    "qualities": [
+      {"match": ["broad", "wide", "long", "deep", "strong"], "text": "a broad, strong life line is read as vitality and enthusiasm — traditionally about energy, never length of life", "strength": "Resilience", "theme": "Vitality"},
+      {"match": ["curv", "arc", "sweep"], "text": "a wide-sweeping life line is read as warmth and openness to experience", "strength": "Openness", "theme": "Adventure"},
+      {"match": ["short", "faint", "weak"], "text": "a lighter life line is read as pacing your energy (again, never lifespan)", "challenge": "Guarding your energy"},
+      {"match": ["chain", "broken"], "text": "breaks are read as chapters and fresh starts", "theme": "Renewal"}
+    ],
+    "default": {"text": "a distinctive life energy"}
+  },
+  "fate_line": {
+    "tradition": "Bhagya Rekha (fate line)",
+    "domain": "direction, work and sense of path",
+    "qualities": [
+      {"match": ["deep", "strong", "clear", "long", "visible"], "text": "a clear fate line is traditionally read as a strong sense of direction", "strength": "Sense of purpose", "theme": "Direction"},
+      {"match": ["faint", "weak", "partial", "absent", "broken", "short"], "text": "a faint fate line is read as a self-made path, shaped by your own choices rather than a fixed track", "strength": "Independence", "theme": "Freedom and choice"},
+      {"match": ["wav", "wander", "wavy"], "text": "a wavering fate line is read as a varied, winding path", "theme": "Exploration"}
+    ],
+    "default": {"text": "a path still being written"}
+  },
+  "sun_line": {
+    "tradition": "Surya Rekha (sun line)",
+    "domain": "creativity, expression and a little shine",
+    "qualities": [
+      {"match": ["present", "clear", "deep", "strong", "visible", "long"], "text": "a present sun line is traditionally linked with creativity and a natural bit of shine", "strength": "Creativity", "theme": "Expression"},
+      {"match": ["faint", "weak", "absent"], "text": "a faint sun line is read as a quieter, still-emerging spark", "theme": "Growth"}
+    ],
+    "default": {"text": "a quiet creative undercurrent"}
+  }
+}
