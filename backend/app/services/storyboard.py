@@ -66,6 +66,20 @@ def compose(reading: Reading) -> Storyboard:
     mood_adj = MOODS.get(_first(reading.strengths, "_default"), MOODS["_default"])
     theme_l = (theme if theme != "_default" else "their own quiet path").lower()
 
+    # personality signature frames the comic's story (same archetype as the reading)
+    from .signature import derive_signature
+    archetype, _essence = derive_signature(reading.themes, reading.strengths)
+    short = archetype.replace("The ", "")
+
+    # pull real, specific content from THIS reading so the comic says something
+    s = [x.lower() for x in reading.strengths]
+    s0 = s[0] if s else "a quiet strength"
+    chal = reading.challenges[0].lower() if reading.challenges else None
+    cap1 = f"Meet the {short}."
+    cap2 = f"You lead with {s0}."
+    cap3 = (f"Your edge to watch — {chal}." if chal else "At the crossroads, you choose your own way.")
+    cap4 = f"And you walk toward {theme_l}."
+
     # one consistent character description, repeated in every panel's visual
     character = f"a lone traveller with a small lantern, {mood_adj}"
 
@@ -78,7 +92,7 @@ def compose(reading: Reading) -> Storyboard:
             subject=character, shot="wide establishing shot", mood="curious, hushed",
             visual=(f"{character} discovers a softly glowing palm held open, its lines "
                     f"shimmering like constellations; {palette}"),
-            caption="It began with a light in the palm.",
+            caption=cap1,
         ),
         Panel(
             panel=2, beat="rising",
@@ -86,7 +100,7 @@ def compose(reading: Reading) -> Storyboard:
             mood="warm, unfolding",
             visual=(f"the palm's brightest line unfurls into {rising_place}; {character} "
                     f"steps forward along it; {palette}"),
-            caption=f"One line became the way — toward {theme_l}.",
+            caption=cap2,
         ),
         Panel(
             panel=3, beat="turn",
@@ -94,7 +108,7 @@ def compose(reading: Reading) -> Storyboard:
             mood="charged, pivotal",
             visual=(f"{turning_threshold}; {character} pauses where the fate line fades, "
                     f"deciding; {palette}"),
-            caption="Where the path faded, a choice appeared.",
+            caption=cap3,
         ),
         Panel(
             panel=4, beat="resolution",
@@ -102,7 +116,7 @@ def compose(reading: Reading) -> Storyboard:
             shot="wide, hopeful", mood="bright, resolved",
             visual=(f"{character} walks their chosen path toward {theme_l} as dawn breaks; "
                     f"{palette}"),
-            caption="They chose their own, and walked on.",
+            caption=cap4,
         ),
     ]
 

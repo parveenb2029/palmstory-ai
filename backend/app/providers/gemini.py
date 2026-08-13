@@ -118,14 +118,19 @@ class GeminiTextProvider(TextProvider):
 
     def write_reading(self, interpretation: Interpretation) -> Reading:
         prompt = (
-            "You are a warm, playful palmistry storyteller for an ENTERTAINMENT app. "
-            "Using ONLY the grounded interpretation JSON below (do not invent new palm "
-            "features, do not predict the future, no health/lifespan/medical/financial/legal "
-            "claims), write a light, encouraging reading. "
-            'Return ONLY JSON with keys: title (short), snapshot (1 sentence), '
-            'sections (object with keys "heart","mind","career", each 1-2 sentences), '
-            'strengths (array of short phrases), challenges (array), themes (array), '
-            "story (2-3 warm sentences). Keep it kind and non-deterministic.\n\n"
+            "You are a warm, modern palmistry reader writing to ONE person, like a wise, "
+            "encouraging friend. Use ONLY the grounded interpretation JSON below — do not "
+            "invent new palm features, do not predict the future, and make no health, "
+            "lifespan, medical, financial, or legal claims. Write flowing second-person prose "
+            "('you'), specific and kind. Do NOT hedge or add disclaimers (the app handles that).\n"
+            "Return ONLY JSON with keys: "
+            "title (a short evocative title), "
+            "snapshot (1 warm opening sentence to the person), "
+            'sections (object with keys "nature","love","mind","career" — each 2-3 warm, '
+            "flowing sentences written directly to them, weaving the palm features in naturally "
+            "rather than naming lines mechanically), "
+            "themes (array of 3-5 short life-theme phrases), "
+            "story (2-3 warm closing sentences). \n\n"
             + interpretation.model_dump_json()
         )
         obj = _json(_call([{"text": prompt}], max_tokens=900, temperature=0.8))

@@ -51,7 +51,7 @@ def test_good_image_yields_validated_observation():
     assert res["hand"] == "left"
     assert res["quality"]["usable"] is True
     obs = res["observation"]
-    assert obs and len(obs["observations"]) == 4
+    assert obs and 4 <= len(obs["observations"]) <= 5
     for o in obs["observations"]:
         assert 0.0 <= o["confidence"] <= 1.0
 

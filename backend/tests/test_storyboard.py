@@ -38,8 +38,8 @@ def test_palette_and_metaphor_follow_theme():
     free = compose(_reading(themes=["Freedom and choice"]))
     assert warm.style.palette != free.style.palette          # theme changes palette
     assert "rose" in warm.style.palette
-    # dominant theme surfaces in the rising panel's caption
-    assert "connection" in warm.panels[1].caption.lower()
+    # dominant theme surfaces in the resolution panel's caption
+    assert "connection" in warm.panels[3].caption.lower()
 
 
 def test_deterministic():

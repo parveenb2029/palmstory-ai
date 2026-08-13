@@ -3,92 +3,87 @@
 {% block content %}
 <article class="reading">
   <div class="head">
-    <span class="eyebrow">Your palm story · {{ r.hand }} palm{% if r.created %} · {{ r.created }}{% endif %}</span>
+    <span class="eyebrow">Your palm reading · {{ r.hand }} hand{% if r.created %} · {{ r.created }}{% endif %}</span>
     <h1>{{ r.title }}</h1>
   </div>
 
-  {% if r.snapshot %}
-  <div class="snapshot">
-    <span class="eyebrow">Palm snapshot</span>
-    <p style="margin-top:8px;font-size:1.1rem">{{ r.snapshot }}</p>
-  </div>
+  {% if r.snapshot %}<p class="reading-lead">{{ r.snapshot }}</p>{% endif %}
+
+  {% set labels = {'nature':'Your nature','love':'Love & relationships','heart':'Love & relationships','mind':'How you think','career':'Drive & work'} %}
+  {% for key in ['nature','love','heart','mind','career'] %}
+    {% if r.sections.get(key) %}
+    <section class="rsec"><h3>{{ labels[key] }}</h3><p>{{ r.sections[key] }}</p></section>
+    {% endif %}
+  {% endfor %}
+
+  {% if r.themes %}
+  <section class="rsec">
+    <h3>Life themes</h3>
+    <div class="chips">{% for t in r.themes %}<span>{{ t }}</span>{% endfor %}</div>
+  </section>
   {% endif %}
 
-  {% if r.facets %}
-  <div class="rsec">
-    <h3>Lines we could read</h3>
-    <p class="hint" style="margin-bottom:10px">Confidence is how clearly we <em>detected</em> the line — not that any interpretation is true.</p>
-    <div class="lines-tbl">
-      {% for f in r.facets %}
-      <div class="line-row {% if not f.detected %}faint{% endif %}">
-        <div><strong>{{ f.tradition }}</strong><br /><span class="muted" style="font-size:.88rem">{{ f.note }}</span></div>
-        <span class="conf">{{ '%.0f'|format(f.conf*100) }}%{% if f.detected %} · detected{% else %} · faint{% endif %}</span>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-
-  {% if r.sections.heart %}<div class="rsec"><h3>Heart &amp; Relationships</h3><p class="muted">{{ r.sections.heart }}</p></div>{% endif %}
-  {% if r.sections.mind %}<div class="rsec"><h3>Mind &amp; Personality</h3><p class="muted">{{ r.sections.mind }}</p></div>{% endif %}
-  {% if r.sections.career %}<div class="rsec"><h3>Career &amp; Ambition</h3><p class="muted">{{ r.sections.career }}</p></div>{% endif %}
-
-  <div class="rsec two">
-    <div><h3>Strengths</h3><div class="chips">{% for s in r.strengths %}<span>{{ s }}</span>{% endfor %}</div></div>
-    <div><h3>Challenges</h3><div class="chips">{% for c in r.challenges %}<span>{{ c }}</span>{% endfor %}</div></div>
-  </div>
-
-  {% if r.themes %}<div class="rsec"><h3>Life themes</h3><div class="chips">{% for t in r.themes %}<span>{{ t }}</span>{% endfor %}</div></div>{% endif %}
-
-  {% if r.story %}<div class="rsec"><h3>Your story</h3><p class="finalstory">{{ r.story }}</p></div>{% endif %}
+  {% if r.story %}<section class="rsec closing"><p class="finalstory">{{ r.story }}</p></section>{% endif %}
 
   {% if r.comic_panels %}
-  <div class="rsec">
-    <h3>Your story in comic form</h3>
+  <section class="rsec">
+    <h3>Your reading, as a comic</h3>
     <div class="comic">
       {% for p in r.comic_panels %}
-      <figure class="panel">
-        <img src="{{ p.image_url }}" alt="Comic panel {{ p.panel }}: {{ p.caption }}" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px" />
-      </figure>
-      </figure>
+      <figure class="panel"><img src="{{ p.image_url }}" alt="Comic panel {{ p.panel }}" loading="lazy" style="width:100%;height:auto;display:block;border-radius:8px" /></figure>
       {% endfor %}
     </div>
-  </div>
+  </section>
   {% endif %}
 
   {# ---- Ask about your reading ---- #}
-  <div class="rsec">
+  <section class="rsec">
     <h3>Ask about your reading</h3>
     {% if current_user %}
       <div class="qa-box">
-        <p class="muted" id="qa-intro">Curious about something specific in your reading? Ask away.</p>
+        <p class="muted" id="qa-intro">Curious about something specific? Ask away.</p>
         <div id="qa-thread"></div>
         <div class="qa-input">
-          <input id="qa-q" type="text" maxlength="300" placeholder="e.g. What does my heart line say about relationships?" />
+          <input id="qa-q" type="text" maxlength="300" placeholder="e.g. What does this say about my relationships?" />
           <button id="qa-ask" class="btn primary" data-reading="{{ r.reading_id }}">Ask</button>
         </div>
       </div>
     {% else %}
       <div class="signup-gate">
-        <p style="margin-bottom:14px">Have follow-up questions about your palm? <strong>Create a free account</strong> to ask questions about your reading and to get more readings.</p>
+        <p style="margin-bottom:14px">Want to go deeper? <strong>Create a free account</strong> to ask questions about your reading and get more readings.</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <a href="/register" class="btn primary">Sign up free</a>
           <a href="/login" class="btn ghost">Log in</a>
         </div>
       </div>
     {% endif %}
-  </div>
+  </section>
 
-  <div class="disclaimer" style="margin-top:26px">Traditional palmistry interpretation, presented for entertainment. Not a prediction and not medical, financial, legal, or psychological advice.</div>
+  {% if r.facets %}
+  <details class="lines-detail">
+    <summary>The lines we read (for the curious)</summary>
+    <p class="hint" style="margin:10px 0">Confidence is how clearly the line was <em>detected</em> — not how true any reading is.</p>
+    <div class="lines-tbl">
+      {% for f in r.facets %}
+      <div class="line-row {% if not f.detected %}faint{% endif %}">
+        <div><strong>{{ f.tradition }}</strong><br /><span class="muted" style="font-size:.86rem">{{ f.note }}</span></div>
+        <span class="conf">{{ '%.0f'|format(f.conf*100) }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
 
-  <div class="center" style="margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center">
+  <p class="disclaimer-mini">✦ Just for fun and reflection — palmistry is a tradition, not a prediction.</p>
+
+  <div class="center" style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center">
     {% if current_user %}
       <a href="/capture" class="btn ghost">Read another palm</a>
       <a href="/history" class="btn primary">My readings</a>
       {% if r.reading_id %}
       <form action="/reading/{{ r.reading_id }}/delete" method="post" style="display:inline">
         <input type="hidden" name="csrf" value="{{ csrf_token }}" />
-        <button type="submit" class="btn danger" style="padding:12px 18px">Delete this reading</button>
+        <button type="submit" class="btn danger" style="padding:12px 18px">Delete</button>
       </form>
       {% endif %}
     {% else %}

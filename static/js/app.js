@@ -123,7 +123,7 @@ const $ = (id) => document.getElementById(id);
     shot.classList.add("hidden");
     $("reviewStep").classList.add("hidden");
     $("captureStep").classList.remove("hidden");
-    startCamera();
+    showCameraOff();   // let the user choose camera or upload again
   }
 
   /* ---------- image quality gate (client-side, pre-AI) ----------
@@ -312,5 +312,5 @@ const $ = (id) => document.getElementById(id);
   window.addEventListener("pagehide", stopCamera);
   window.addEventListener("beforeunload", stopCamera);
 
-  startCamera();
+  showCameraOff();   // camera stays OFF until the user turns it on (or uploads)
 })();

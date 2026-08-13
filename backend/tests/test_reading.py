@@ -18,13 +18,13 @@ def test_reading_is_valid_and_grounded():
     r = MockTextProvider().write_reading(_interp())
     assert isinstance(r, Reading)
     assert r.title and r.snapshot and r.story
-    assert set(r.sections) == {"heart", "mind", "career"}
+    assert set(r.sections) == {"nature", "love", "mind", "career"}
     # grounded: strengths/themes come straight from the interpretation
     interp = _interp()
     assert r.strengths == interp.strengths
     assert r.themes == interp.themes
-    # the heart section reflects the heart-line interpretation (warmth)
-    assert "warm" in r.sections["heart"].lower()
+    # the love section reflects the heart-line interpretation (warmth)
+    assert "warm" in r.sections["love"].lower()
 
 
 def test_reading_is_deterministic():

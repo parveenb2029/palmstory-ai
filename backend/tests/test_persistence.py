@@ -53,7 +53,7 @@ def test_reading_detail_renders_real_data_and_comic():
     c = _client()
     rid = _make_reading(c)
     page = c.get(f"/reading/{rid}").text
-    assert "Palm snapshot" in page and "comic" in page.lower()
+    assert "data:image/svg+xml" in page and ("Your nature" in page or "How you think" in page)
     assert "data:image/svg+xml" in page  # real comic panel images embedded
 
 

@@ -10,6 +10,7 @@ GET /api/v1/readings/{job_id}
     Owner-only (404 for anyone else, so job existence isn't leaked).
 """
 import json
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
@@ -28,7 +29,7 @@ from ._imageio import bytes_from_upload, check_size, from_data_url
 
 router = APIRouter(prefix="/api/v1", tags=["readings"])
 
-FREE_GUEST_READINGS = 1  # a guest gets one full reading before sign-up is needed
+FREE_GUEST_READINGS = int(os.getenv("GUEST_FREE_READINGS", "1"))  # free readings before sign-up; raise for testing
 
 
 class JobAccepted(BaseModel):

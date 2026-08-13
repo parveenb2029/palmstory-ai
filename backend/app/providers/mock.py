@@ -28,14 +28,46 @@ class MockVisionProvider(VisionProvider):
     name = "mock"
 
     def observe(self, image: bytes, hand: str) -> PalmObservation:
-        # deterministic, but nudged by the image so different photos differ slightly
-        bump = (_seed(image) % 7) / 100.0
-        return PalmObservation(hand=hand, observations=[
-            Observation(feature="heart_line", observation="clearly visible, curving upward", confidence=round(0.80 + bump, 2)),
-            Observation(feature="head_line", observation="long and even", confidence=round(0.74 + bump, 2)),
-            Observation(feature="life_line", observation="broad arc around the thumb", confidence=round(0.83 - bump, 2)),
-            Observation(feature="fate_line", observation="faint / partial", confidence=round(0.31 + bump, 2)),
+        # Vary the read per photo so different palms give different readings.
+        # (Not a true palm read — that's what Gemini adds — but no longer identical for everyone.)
+        import random
+        rng = random.Random(_seed(image))
+        heart = rng.choice([
+            "clearly visible, curving upward",
+            "straight and level",
+            "long and deep",
+            "short, kept close",
+            "clear and strong",
         ])
+        head = rng.choice([
+            "long and even",
+            "long, sloping gently downward",
+            "short and straight",
+            "deep and clear",
+        ])
+        life = rng.choice([
+            "a broad, sweeping arc around the thumb",
+            "deep and strong",
+            "long and clear",
+            "faint and narrow",
+        ])
+        fate = rng.choice([
+            "clear and deep",
+            "faint / partial",
+            "absent",
+            "wavy, wandering",
+        ])
+        obs = [
+            Observation(feature="heart_line", observation=heart, confidence=round(rng.uniform(0.72, 0.9), 2)),
+            Observation(feature="head_line", observation=head, confidence=round(rng.uniform(0.70, 0.88), 2)),
+            Observation(feature="life_line", observation=life, confidence=round(rng.uniform(0.70, 0.90), 2)),
+            Observation(feature="fate_line", observation=fate, confidence=round(rng.uniform(0.30, 0.80), 2)),
+        ]
+        if rng.random() > 0.45:   # a sun line appears on some hands
+            obs.append(Observation(feature="sun_line",
+                                   observation=rng.choice(["clear and present", "faint"]),
+                                   confidence=round(rng.uniform(0.40, 0.80), 2)))
+        return PalmObservation(hand=hand, observations=obs)
 
 
 class MockTextProvider(TextProvider):
@@ -47,38 +79,53 @@ class MockTextProvider(TextProvider):
         strengths = interpretation.strengths
         challenges = interpretation.challenges
 
-        def section(feature: str, fallback: str) -> str:
+        def trait(feature: str):
             f = facets.get(feature)
-            if not f:
-                return fallback
-            text = f.interpretations[0]
-            return text[0].upper() + text[1:] + "."
+            if not f or not f.interpretations:
+                return None
+            t = f.interpretations[0]
+            for marker in (" read as ", " linked with ", " associated with ", " suggests "):
+                if marker in t:
+                    t = t.split(marker, 1)[1]
+                    break
+            # drop any KB caveat clause so it doesn't leak into the warm prose
+            t = t.split("—")[0].split(" (")[0].split(", traditionally")[0]
+            return t.strip().rstrip(".,;")
 
         title = _TITLES.get(themes[0], "The Story in Your Hand") if themes else "The Story in Your Hand"
 
-        lead_strength = strengths[0].lower() if strengths else "a quiet resolve"
-        lead_theme = themes[0].lower() if themes else "a story still forming"
-        n_lines = sum(1 for f in interpretation.facets if f.detected)
-        snapshot = (f"A {interpretation.hand} palm with {n_lines} clearly-read line"
-                    f"{'' if n_lines == 1 else 's'}, where {lead_strength} meets {lead_theme}.")
+        love_t = trait("heart_line")
+        mind_t = trait("head_line")
+        nat_t = trait("life_line")
+        car_t = trait("fate_line") or trait("sun_line")
 
-        story_bits = []
-        if strengths:
-            story_bits.append("your palm speaks of " + ", ".join(s.lower() for s in strengths[:3]))
-        if themes:
-            story_bits.append("with threads of " + " and ".join(t.lower() for t in themes[:2]) + " running through it")
-        story = ("In this entertainment-style reading, "
-                 + ("; ".join(story_bits) if story_bits else "your palm keeps its own quiet counsel")
-                 + ". The road ahead isn't drawn for you — that's the point.")
+        snapshot = (f"Here's the little story your {interpretation.hand} hand seems to tell — "
+                    "read it as a friendly mirror, not a map set in stone.")
+
+        nature = ("At your core, you come across as "
+                  + (nat_t or "steady, warm, and quietly your own person")
+                  + ((f". People tend to feel your {strengths[0].lower()} before you even say a word.")
+                     if strengths else "."))
+        love = ("When it comes to love and closeness, you lean toward "
+                + (love_t or "a warm, genuine way of connecting")
+                + ". You tend to give people the real you — and that honesty is a quietly rare gift.")
+        mind = ("The way your mind works is "
+                + (mind_t or "thoughtful and distinctly your own")
+                + ". You make sense of things in a way that's yours, and you trust it.")
+        career = ("For drive and direction, your hand leans toward "
+                  + (car_t or "a path you shape by your own choices")
+                  + ". You're at your best when the work actually means something to you.")
+
+        theme_line = ", ".join(t.lower() for t in themes[:3]) if themes else "finding your own quiet path"
+        growth = (f" If there's a growing edge, it's {challenges[0].lower()} — nothing to fix, just something to keep an eye on."
+                  if challenges else "")
+        story = (f"If your palm had a headline, it would be about {theme_line}.{growth} "
+                 "None of it is set in stone — the fun is simply noticing what's already yours, and leaning into it.")
 
         return Reading(
             title=title,
             snapshot=snapshot,
-            sections={
-                "heart": section("heart_line", "A distinctive way of relating."),
-                "mind": section("head_line", "A characteristic way of thinking."),
-                "career": section("fate_line", "A path shaped by your own choices."),
-            },
+            sections={"nature": nature, "love": love, "mind": mind, "career": career},
             strengths=strengths,
             challenges=challenges,
             themes=themes,

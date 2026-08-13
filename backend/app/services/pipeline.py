@@ -33,6 +33,8 @@ def generate_reading(image_bytes: bytes, hand: str, quality: dict, detection: di
     interpretation = interpret(observation)              # deterministic, grounded
     stage("writing")
     reading = tp.write_reading(interpretation)           # narrated FROM interpretation
+    from .signature import apply_signature
+    apply_signature(reading)                             # headline with a mythic archetype
     stage("storyboard")
     storyboard = tp.storyboard(reading)                  # 4-beat arc
     stage("illustrating")

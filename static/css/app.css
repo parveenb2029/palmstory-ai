@@ -237,3 +237,14 @@ footer.site{border-top:1px solid var(--line);padding:34px 0;margin-top:40px}
 .qa-msg{margin:10px 0;padding:12px 14px;border-radius:10px;line-height:1.5}
 .qa-msg.q{background:rgba(75,63,168,.08);font-weight:600}
 .qa-msg.a{background:var(--bg);border:1px solid var(--line)}
+
+/* --- reading page: flowing, person-centred --- */
+.reading-lead{font-size:1.15rem;line-height:1.6;color:var(--text);margin:18px 0 26px;font-style:italic;
+  border-left:3px solid var(--accent);padding-left:16px}
+.reading .rsec{margin:22px 0}
+.reading .rsec h3{font-size:1.15rem;margin-bottom:6px;color:var(--primary)}
+.reading .rsec p{line-height:1.7;color:var(--text)}
+.reading .rsec.closing .finalstory{font-size:1.05rem;line-height:1.7}
+.lines-detail{margin:26px 0 10px;border:1px solid var(--line);border-radius:var(--r);padding:10px 16px;background:var(--surface)}
+.lines-detail summary{cursor:pointer;font-weight:600;color:var(--muted)}
+.disclaimer-mini{text-align:center;color:var(--muted);font-size:.82rem;margin:20px 0 4px}

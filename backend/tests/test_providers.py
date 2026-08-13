@@ -12,7 +12,7 @@ def test_mock_vision_is_valid_and_deterministic():
     a = v.observe(b"same-bytes", "right")
     b = v.observe(b"same-bytes", "right")
     assert isinstance(a, PalmObservation) and a.hand == "right"
-    assert len(a.observations) == 4
+    assert 4 <= len(a.observations) <= 5
     assert a == b  # deterministic
     for o in a.observations:
         assert 0.0 <= o.confidence <= 1.0
